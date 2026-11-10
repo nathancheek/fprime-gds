@@ -102,7 +102,10 @@ class SerialAdapter(fprime_gds.common.communication.adapters.base.BaseAdapter):
                 # Read as much data as possible, while ensuring to block if no data is available at this time. Note: as much
                 # data is read as possible to avoid a long-return time to this call. Minimum data to read is one byte in
                 # order to block this function while data is incoming.
-                self.serial.timeout = timeout
+                # Note: setting the timeout reconfigures the port in pyserial. On macOS, at bauds above 230400, that
+                # re-sends the baud rate to the driver, which can drop received bytes. Only set it when it changes.
+                if self.serial.timeout != timeout:
+                    self.serial.timeout = timeout
                 data = self.serial.read(1)  # Force a block for at least 1 character
                 while self.serial.in_waiting:
                     data += self.serial.read(
